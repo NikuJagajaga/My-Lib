@@ -1,6 +1,6 @@
 LIBRARY({
     name: "ConnectedTexture",
-    version: 5,
+    version: 6,
     shared: false,
     api: "CoreEngine"
 });
@@ -27,6 +27,12 @@ var ConnectedTexture = {
         y: ["x", "z"],
         z: ["x", "y"],
         x: ["z", "y"],
+    },
+
+    _setItemModel: function(id, data, texture){
+        const render = new ICRender.Model();
+        render.addEntry(BlockRenderer.createTexturedBlock([[texture, 0]]));
+        ItemModel.getFor(id, data).setModel(render);
     },
 
     setModel: function(id, data, texture, groupName){
@@ -72,6 +78,7 @@ var ConnectedTexture = {
         }
         
         BlockRenderer.setStaticICRender(id, data, render);
+        this._setItemModel(id, data, texture);
 
     },
 
@@ -131,6 +138,7 @@ var ConnectedTexture = {
         }
         
         BlockRenderer.setStaticICRender(id, data, render);
+        this._setItemModel(id, data, texture);
 
     }
 
