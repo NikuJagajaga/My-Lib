@@ -1,0 +1,21 @@
+{
+	"compilerOptions": {
+		"target": "ES5",
+		"lib": [
+			"ESNext"
+		],
+		"strict": false,
+    	"skipLibCheck": true,
+		"outFile": "BookModel.js",
+		"newLine": "LF"
+	},
+	"include": [
+		"BookModel.ts",
+  	],
+	"files": [
+		"../_MODULE_/android-declarations.d.ts",
+		"../_MODULE_/android.d.ts",
+		"../_MODULE_/core-engine.d.ts",
+		"../_MODULE_/additional.d.ts"
+	]
+}
