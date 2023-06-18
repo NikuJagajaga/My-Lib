@@ -40,20 +40,30 @@ var WindowMaker = /** @class */ (function () {
     function WindowMaker(title, width, height, frame) {
         this.width = width;
         this.height = height;
-        this.ratio = 1000 / width;
+        this.ratio = width / height;
+        this.scale = this.ratio >= WindowMaker.CONTENT_SIZE.ratio ? 1000 / width : WindowMaker.CONTENT_SIZE.height / height;
+        this.posX = (1000 - width * this.scale) / 2;
         this.frame = frame || "classic_frame_bg_light";
         this.z = 0;
         this.content = {
             standard: {
                 header: {
-                    text: { text: title, /*font: {color: Color.DKGRAY, size: 16}*/ },
+                    text: { text: title },
                     height: 60
                 },
                 inventory: { standard: true },
                 background: { standard: true }
             },
             drawing: [
-                { type: "frame", x: 0, y: 0, width: 1000, height: height / width * 1000, bitmap: this.frame, scale: this.ratio }
+                {
+                    type: "frame",
+                    x: this.posX,
+                    y: 0,
+                    width: width * this.scale,
+                    height: height * this.scale,
+                    bitmap: this.frame,
+                    scale: this.scale
+                }
             ],
             elements: {}
         };
@@ -63,18 +73,40 @@ var WindowMaker = /** @class */ (function () {
         this.withTooltip = enable;
         return this;
     };
+    /*
+        private solveName(name: string): string[] {
+            const arr: string[] = [];
+            const spl = name.split("^");
+            if(spl.length > 1){
+                const idx = spl[1].split("-");
+                //if(idx.length != 2) return arr;
+                const from = parseInt(idx[0]);
+                const to = parseInt(idx[0]);
+                //if(isNaN(from) || isNaN(to)) return arr;
+                for(let i = from; i <= to; i++){
+                    arr.push(spl[0] + i);
+                }
+            }
+            else{
+                arr.push(name);
+            }
+            return arr;
+        }
+    */
     /**
      * @param io Specify the slot and tank to be used in the Recipe Viewer window by name.
-     * @param drawings Specify the drawing to be used in the Recipe Viewer window by name.
+     * @param drawings Specify the elements and drawing to be used in the Recipe Viewer window by name.
      *
      */
-    WindowMaker.prototype.getContentForRV = function (io, drawings) {
+    WindowMaker.prototype.getContentForRV = function (io, other) {
         var content = {
             drawing: [
-                { type: "frame", x: 0, y: 0, width: 1000, height: this.height / this.width * 1000, bitmap: this.frame, scale: this.ratio }
+                { type: "frame", x: 0, y: 0, width: 1000, height: this.height * this.scale, bitmap: this.frame, scale: this.scale }
             ],
             elements: {}
         };
+        //let names: string[];
+        //let n = 0;
         if (io.input) {
             for (var i = 0; i < io.input.length; i++) {
                 content.elements["input" + i] = this.content.elements[io.input[i]];
@@ -95,10 +127,15 @@ var WindowMaker = /** @class */ (function () {
                 content.elements["outputLiq" + i] = this.content.elements[io.outputLiq[i]];
             }
         }
-        if (drawings) {
+        if (other) {
             for (var key in this.drawingMap) {
-                if (drawings.indexOf(key) != -1) {
+                if (other.indexOf(key) != -1) {
                     content.drawing.push(this.drawingMap[key]);
+                }
+            }
+            for (var key in this.content.elements) {
+                if (other.indexOf(key) != -1) {
+                    content.elements[key] = this.content.elements[key];
                 }
             }
         }
@@ -106,18 +143,21 @@ var WindowMaker = /** @class */ (function () {
     };
     WindowMaker.prototype.adjustScale = function (elem) {
         if ("x" in elem)
-            elem.x *= this.ratio;
+            elem.x = elem.x * this.scale + this.posX;
         if ("y" in elem)
-            elem.y *= this.ratio;
+            elem.y *= this.scale;
         if ("width" in elem)
-            elem.width *= this.ratio;
+            elem.width *= this.scale;
         if ("height" in elem)
-            elem.height *= this.ratio;
+            elem.height *= this.scale;
         if ("size" in elem)
-            elem.size *= this.ratio;
-        if ("font" in elem && "size" in elem.font)
-            elem.font.size *= this.ratio;
-        elem["scale"] = "scale" in elem ? elem["scale"] * this.ratio : this.ratio;
+            elem.size *= this.scale;
+        if ("font" in elem && "size" in elem.font) {
+            var font = __assign({}, elem.font);
+            font.size *= this.scale;
+            elem.font = font;
+        }
+        elem["scale"] = "scale" in elem ? elem["scale"] * this.scale : this.scale;
     };
     WindowMaker.prototype.getWidth = function () {
         return this.width;
@@ -143,7 +183,20 @@ var WindowMaker = /** @class */ (function () {
         this.drawingMap[name] = drawing;
         return this;
     };
+    /**
+     *
+     * @param name You can also name the element. If you are lazy, you can use an empty string.
+     * @param elements
+     * @returns
+     */
     WindowMaker.prototype.addElements = function (name, elements) {
+        if (name == "") {
+            var idx = 0;
+            while (("element" + idx) in this.drawingMap) {
+                idx++;
+            }
+            name = "element" + idx;
+        }
         this.adjustScale(elements);
         this.content.elements[name] = __assign(__assign({}, elements), { z: this.z });
         this.z++;
@@ -326,6 +379,18 @@ var WindowMaker = /** @class */ (function () {
     WindowMaker.SCALE_UP = 1;
     WindowMaker.SCALE_LEFT = 2;
     WindowMaker.SCALE_DOWN = 3;
+    WindowMaker.CONTENT_SIZE = (function () {
+        var win = new UI.StandardWindow({
+            standard: {
+                header: { height: 60 },
+                inventory: { standard: true },
+                background: { standard: true }
+            },
+            elements: {}
+        });
+        var loc = win.getWindow("content").getLocation();
+        return { width: loc.getWindowWidth(), height: loc.getWindowHeight(), ratio: loc.getWindowWidth() / loc.getWindowHeight() };
+    })();
     return WindowMaker;
 }());
 EXPORT("WindowMaker", WindowMaker);

@@ -13,8 +13,15 @@ declare class WindowMaker {
     static readonly SCALE_UP = 1;
     static readonly SCALE_LEFT = 2;
     static readonly SCALE_DOWN = 3;
+    static readonly CONTENT_SIZE: {
+        width: number;
+        height: number;
+        ratio: number;
+    };
     readonly width: number;
     readonly height: number;
+    readonly scale: number;
+    readonly posX: number;
     readonly ratio: number;
     readonly frame: string;
     z: number;
@@ -29,7 +36,7 @@ declare class WindowMaker {
     enableTooltip(enable: boolean): this;
     /**
      * @param io Specify the slot and tank to be used in the Recipe Viewer window by name.
-     * @param drawings Specify the drawing to be used in the Recipe Viewer window by name.
+     * @param drawings Specify the elements and drawing to be used in the Recipe Viewer window by name.
      *
      */
     getContentForRV(io: {
@@ -37,7 +44,7 @@ declare class WindowMaker {
         output?: string[];
         inputLiq?: string[];
         outputLiq?: string[];
-    }, drawings?: string[]): UI.WindowContent;
+    }, other?: string[]): UI.WindowContent;
     protected adjustScale(elem: UI.DrawingElements | UI.Elements): void;
     getWidth(): number;
     getHeight(): number;
@@ -48,6 +55,12 @@ declare class WindowMaker {
      * @returns
      */
     addDrawing(name: string, drawing: UI.DrawingElements): this;
+    /**
+     *
+     * @param name You can also name the element. If you are lazy, you can use an empty string.
+     * @param elements
+     * @returns
+     */
     addElements(name: string, elements: UI.Elements): this;
     addSlot(name: string, x: number, y: number, size: number, bmpName?: string): this;
     addScale(name: string, x: number, y: number, bmpBack: string, bmpFront: string, direction?: 0 | 1 | 2 | 3, thickness?: number): this;
